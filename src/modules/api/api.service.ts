@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import axios, { AxiosInstance } from 'axios';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import axios from 'axios';
 
 @Injectable()
 export class ApiService {
-  private axiosInstance: AxiosInstance;
+  private axiosInstance;
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -11,23 +11,15 @@ export class ApiService {
     });
   }
 
-  async getAllRecipes() {
-    return await this.axiosInstance.get('/search.php?s=');
-  }
+  async get(endpoint: string) {
+    try {
+      const response = await this.axiosInstance.get(endpoint);
 
-  async getRecipesByIngredient(ingredient: string) {
-    return await this.axiosInstance.get(`/filter.php?i=${ingredient}`);
-  }
-
-  async getRecipesByCountry(country: string) {
-    return await this.axiosInstance.get(`/filter.php?a=${country}`);
-  }
-
-  async getRecipesByCategory(category: string) {
-    return await this.axiosInstance.get(`/filter.php?c=${category}`);
-  }
-
-  async getRecipeInfo(recipeId: string) {
-    return await this.axiosInstance.get(`/lookup.php?i=${recipeId}`);
+      return response.data;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Ошибка при запросе данных из внешнего API',
+      );
+    }
   }
 }

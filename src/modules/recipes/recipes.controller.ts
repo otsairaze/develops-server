@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { RecipesService } from './recipes.service';
 
 @Controller('recipes')
@@ -6,27 +6,24 @@ export class RecipesController {
   constructor(private readonly recipesService: RecipesService) {}
 
   @Get()
-  getAllRecipes() {
-    return this.recipesService.getAllRecipes();
+  async getAllRecipes() {
+    return await this.recipesService.getAllRecipes();
   }
 
-  @Get('ingredient/:ingredient')
-  getRecipesByIngredient(@Param('ingredient') ingredient: string) {
-    return this.recipesService.getRecipesByIngredient(ingredient);
-  }
-
-  @Get('country/:country')
-  getRecipesByCountry(@Param('country') country: string) {
-    return this.recipesService.getRecipesByCountry(country);
-  }
-
-  @Get('category/:category')
-  getRecipesByCategory(@Param('category') category: string) {
-    return this.recipesService.getRecipesByCategory(category);
+  @Get('filter/:type/:query')
+  async getRecipesByFilter(
+    @Param('type') type: 'ingredient' | 'country' | 'category',
+    @Param('query') query: string,
+  ) {
+    const recipes = await this.recipesService.getRecipesByFilter(type, query);
+    console.log(recipes, 'recipes');
+    return recipes;
   }
 
   @Get(':id')
-  getRecipeInfo(@Param('id') id: string) {
-    return this.recipesService.getRecipeInfo(id);
+  async getRecipeInfo(@Param('id') id: string) {
+    const recipe = await this.recipesService.getRecipeInfo(id);
+
+    return recipe;
   }
 }

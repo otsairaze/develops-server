@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ApiService } from '../api/api.service';
 
 @Injectable()
@@ -6,22 +6,45 @@ export class RecipesService {
   constructor(private readonly apiService: ApiService) {}
 
   async getAllRecipes() {
-    return await this.apiService.getAllRecipes();
+    try {
+      const data = await this.apiService.get('/search.php?s=');
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Ошибка при получении всех рецептов',
+      );
+    }
   }
 
-  async getRecipesByIngredient(ingredient: string) {
-    return await this.apiService.getRecipesByIngredient(ingredient);
-  }
+  async getRecipesByFilter(type: string, query: string) {
+    const filterParams: { [key: string]: string } = {
+      ingredient: `i=${query}`,
+      country: `a=${query}`,
+      category: `c=${query}`,
+    };
 
-  async getRecipesByCountry(country: string) {
-    return await this.apiService.getRecipesByCountry(country);
-  }
+    const filterQuery = filterParams[type];
 
-  async getRecipesByCategory(category: string) {
-    return await this.apiService.getRecipesByCategory(category);
+    if (!filterQuery) {
+      throw new Error('Неверный тип фильтрации');
+    }
+
+    try {
+      return await this.apiService.get(`/filter.php?${filterQuery}`);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Ошибка при получении рецептов по фильтру ${type}: ${query}`,
+      );
+    }
   }
 
   async getRecipeInfo(recipeId: string) {
-    return await this.apiService.getRecipeInfo(recipeId);
+    try {
+      return await this.apiService.get(`/lookup.php?i=${recipeId}`);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Ошибка при получении информации о рецепте с ID ${recipeId}`,
+      );
+    }
   }
 }
